@@ -1,6 +1,7 @@
 package com.example.multitimer
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
@@ -38,10 +39,21 @@ import androidx.compose.ui.modifier.ModifierLocalMap
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.multitimer.ui.MultiTimerList
 import com.example.multitimer.ui.MultiTimerViewModel
+import com.example.multitimer.ui.TimerDetail
 import com.example.multitimer.ui.theme.MultiTimerTheme
 import kotlinx.coroutines.delay
+
+enum class ScreenType{
+    MultiTimerList,
+    TimerDetail,
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,26 +74,48 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun MultiTimerApp(modifier: Modifier = Modifier){
+fun MultiTimerApp(
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController(),
+){
     val multiTimerViewModel: MultiTimerViewModel = viewModel()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+
+    val currentDestination =currentBackStackEntry?.destination?.route
 
     MultiTimerTheme {
         Scaffold(
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        multiTimerViewModel.addTimer(time = 20f, keepAfterFinish = false)
+                if( currentDestination != ScreenType.TimerDetail.name) {
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate(route = ScreenType.TimerDetail.name)
+                        }
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
                     }
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
                 }
             },
             modifier = modifier
         ) { innerPadding->
-            MultiTimerList(
-                modifier = Modifier.padding(innerPadding),
-                timerListViewModel = multiTimerViewModel,
-            )
+
+            NavHost(
+                navController = navController,
+                startDestination = ScreenType.MultiTimerList.name,
+                modifier = Modifier.padding(innerPadding)){
+
+                composable(route = ScreenType.MultiTimerList.name){
+                    MultiTimerList(
+                        timerListViewModel = multiTimerViewModel,
+                    )
+                }
+                composable(route=ScreenType.TimerDetail.name){
+                    TimerDetail {
+                        navController.popBackStack()
+                    }
+                }
+            }
+
         }
     }
 }
