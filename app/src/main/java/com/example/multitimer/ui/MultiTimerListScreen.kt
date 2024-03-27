@@ -27,7 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun MultiTimerList(
     modifier: Modifier = Modifier,
     timerListViewModel: MultiTimerViewModel,
-){
+) {
     val timerListUiState by timerListViewModel.uiState.collectAsState()
 
     LazyColumn(
@@ -38,16 +38,18 @@ fun MultiTimerList(
         items(
             count = timerListUiState.timerCards.size,
             itemContent = {
-                Card(modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 8.dp)) {
-                    val timerCard =  timerListUiState.timerCards[it]
+                Card(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 8.dp)
+                ) {
+                    val timerCard = timerListUiState.timerCards[it]
                     TimerCard(
                         timerCardUiState = timerCard,
                         onStartToggle = {
                             timerListViewModel.toggleStart(timerCard.id)
                         },
-                        )
+                    )
                 }
             }
         )
@@ -57,7 +59,7 @@ fun MultiTimerList(
 @Composable
 fun TimerCard(
     timerCardUiState: TimerCardUiState,
-    onStartToggle:()->Unit,
+    onStartToggle: () -> Unit,
 ) {
 
     val startTimerColor = MaterialTheme.colorScheme.secondary
@@ -81,7 +83,7 @@ fun TimerCard(
                     right = size.width * progress // 進捗に応じて右端を計算
                 ) {
                     drawRect(
-                        color = if(timerCardUiState.isStart) startTimerColor else stopTimerColor // タイマーの進行とともに増える色
+                        color = if (timerCardUiState.isStart) startTimerColor else stopTimerColor // タイマーの進行とともに増える色
                     )
                 }
             }
@@ -97,8 +99,8 @@ fun TimerCard(
 
 @Composable
 @Preview(showSystemUi = true)
-fun MultiTimerListPreview(){
-    val timerListViewModel:MultiTimerViewModel = viewModel()
+fun MultiTimerListPreview() {
+    val timerListViewModel: MultiTimerViewModel = viewModel()
     timerListViewModel.addTimer(time = 10f, keepAfterFinish = false)
     MultiTimerList(timerListViewModel = timerListViewModel)
 }
