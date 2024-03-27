@@ -1,5 +1,6 @@
 package com.example.multitimer.ui
 
+import android.util.Range
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.horizontalScroll
@@ -23,10 +24,13 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.selects.select
 
 @Composable
-fun SimpleListItemPicker() {
-    val list = remember { listOf("0","1", "2", "3", "4", "5","6","7","8","9","10") }
-
-    var selectedIndex by remember { mutableStateOf(0) } // 初期選択値
+fun SimpleListItemPicker(
+    valueRange: IntRange = (0..9),
+    defaultSelectedIndex: Int = 0,
+    onValueChange: (Int)->Unit
+) {
+    val list = valueRange.map{it.toString()}
+    var selectedIndex by remember { mutableStateOf(defaultSelectedIndex) } // 初期選択値
 
     //  画面密度
     val density = LocalDensity.current
@@ -61,12 +65,14 @@ fun SimpleListItemPicker() {
                     if (latestDragAmount >= 32.dp) {
                         if (selectedIndex != 0) {
                             selectedIndex--.coerceIn(0, list.size - 1)
+                            onValueChange(selectedIndex)
                         }
                         latestDragAmount = 0.dp
                     } else if (latestDragAmount <= -32.dp) {
 
                         if (selectedIndex != list.size - 1) {
                             selectedIndex++.coerceIn(0, list.size - 1)
+                            onValueChange(selectedIndex)
                         }
                         latestDragAmount = 0.dp
                     }
@@ -147,15 +153,15 @@ fun SimpleListItemPickerPreview(){
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.Center,
         ){
-            SimpleListItemPicker()
-            SimpleListItemPicker()
+            SimpleListItemPicker(){}
+            SimpleListItemPicker(){}
             Box(
                 modifier = Modifier
                     .height(100.dp)
                     .width(40.dp),
             )
-            SimpleListItemPicker()
-            SimpleListItemPicker()
+            SimpleListItemPicker(){}
+            SimpleListItemPicker(){}
         }
     }
 }

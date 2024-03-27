@@ -110,9 +110,17 @@ fun MultiTimerApp(
                     )
                 }
                 composable(route=ScreenType.TimerDetail.name){
-                    TimerDetail {
-                        navController.popBackStack()
-                    }
+                    TimerDetail(
+                        onBackClicked =  {
+                            navController.popBackStack()
+                        },
+                        onCreateClicked = {
+                            multiTimerViewModel.addTimer(
+                                time = it
+                            )
+                            navController.popBackStack()
+                        }
+                    )
                 }
             }
 

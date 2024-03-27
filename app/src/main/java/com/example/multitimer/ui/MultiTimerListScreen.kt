@@ -14,20 +14,14 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.delay
 
 @Composable
 fun MultiTimerList(
@@ -47,9 +41,13 @@ fun MultiTimerList(
                 Card(modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = 8.dp)) {
-                    TimerCard(timerListUiState.timerCards[it]){
-                        //  タイマー終了後の処理
-                    }
+                    val timerCard =  timerListUiState.timerCards[it]
+                    TimerCard(
+                        timerCardUiState = timerCard,
+                        onStartToggle = {
+                            timerListViewModel.toggleStart(timerCard.id)
+                        },
+                        )
                 }
             }
         )
@@ -57,48 +55,25 @@ fun MultiTimerList(
 }
 
 @Composable
-fun TimerCard(timerCardUiState: TimerCardUiState,onComplete: ()->Unit) {
-    var timeLeft by rememberSaveable { mutableFloatStateOf(timerCardUiState.time) }
-    var startFlag by rememberSaveable { mutableStateOf(false) }
-    var completeFlag by rememberSaveable { mutableStateOf(false) }
+fun TimerCard(
+    timerCardUiState: TimerCardUiState,
+    onStartToggle:()->Unit,
+) {
 
     val startTimerColor = MaterialTheme.colorScheme.secondary
     val stopTimerColor = MaterialTheme.colorScheme.outline
-
-    LaunchedEffect(key1 = startFlag) {
-        val startTime = System.currentTimeMillis() // タイマー開始時刻を記録
-        while (startFlag) {
-            val currentTime = System.currentTimeMillis()
-            val elapsedTime = (currentTime - startTime) / 1000f // 経過時間（秒）
-            timeLeft = timerCardUiState.time - elapsedTime // 残り時間を計算
-
-            if (timeLeft <= 0f) {
-                // タイマー終了時の処理
-                timeLeft = 0f
-                startFlag = false
-                completeFlag = true
-                onComplete()
-                break
-            }
-
-            delay(10L) // 次の更新まで少し待機
-        }
-    }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(150.dp)
             .clickable {
-                if (completeFlag) {
-                    completeFlag = false
-                }
-                startFlag = !startFlag
+                onStartToggle()
             }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val progress = timeLeft / timerCardUiState.time // 進捗を計算
+                val progress = timerCardUiState.timeLeft / timerCardUiState.defaultTime // 進捗を計算
                 clipRect(
                     top = 0f,
                     bottom = size.height,
@@ -106,13 +81,13 @@ fun TimerCard(timerCardUiState: TimerCardUiState,onComplete: ()->Unit) {
                     right = size.width * progress // 進捗に応じて右端を計算
                 ) {
                     drawRect(
-                        color = if(startFlag) startTimerColor else stopTimerColor // タイマーの進行とともに増える色
+                        color = if(timerCardUiState.isStart) startTimerColor else stopTimerColor // タイマーの進行とともに増える色
                     )
                 }
             }
             Column(modifier = Modifier.align(Alignment.Center)) {
                 Text(
-                    text = "${timeLeft.toInt()}",
+                    text = "${timerCardUiState.timeLeft.toInt()}",
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             }
